@@ -5,6 +5,8 @@ defmodule MessageBroker.Application do
     port = String.to_integer(System.get_env("PORT") || "4040")
 
     children = [
+      MessageBroker.TerminalHandler,
+      MessageBroker.Auth,
       MessageBroker.RoleManager,
       MessageBroker.SubscriptionManager,
       {Task.Supervisor, name: MessageBroker.TaskSupervisor},

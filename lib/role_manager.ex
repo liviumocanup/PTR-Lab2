@@ -46,7 +46,7 @@ defmodule MessageBroker.RoleManager do
 
   def handle_call({:assign_role, client, role}, _from, state) do
     new_state = Map.put(state, client, role)
-    {:reply, :ok, new_state}
+    {:reply, {:ok, role}, new_state}
   end
 
   def handle_call({:get_role, client}, _from, state) do

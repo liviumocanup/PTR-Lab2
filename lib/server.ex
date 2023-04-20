@@ -9,7 +9,7 @@ defmodule MessageBroker.Server do
 
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    {:ok, pid} = Task.Supervisor.start_child(MessageBroker.TaskSupervisor, fn -> MessageBroker.Client.assign_role(client) end)
+    {:ok, pid} = Task.Supervisor.start_child(MessageBroker.TaskSupervisor, fn -> MessageBroker.Auth.assign_role(client) end)
     :ok = :gen_tcp.controlling_process(client, pid)
     loop_acceptor(socket)
   end
