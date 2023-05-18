@@ -1,0 +1,43 @@
+@startuml
+
+[App] as App
+[Communication Handler] as Ch
+[Communication Tracker] as Ct
+[Database] as DB
+
+[Polyglot] as Poly
+[TCP Handler] as Th
+[MQTT Handler] as MQTT
+[Structures Handler] as Sh
+
+[Server] as Server
+[Authenticator] as Auth
+[Role Manager] as Rm
+[Subscription Manager] as Sm
+
+[Client] as Client
+[Dead Letter Channel] as Dlc
+[Command] as Command
+[Durable Queue] as Dq
+
+App --> Server
+App --> Poly
+App ----> DB
+
+Poly ---> Ct
+Poly --> Ch
+
+Ch --> Th
+Ch --> MQTT
+Ch --> Sh
+
+Server ---> Auth
+Server ---> Rm
+Server ---> Sm
+Server --> Client
+
+Client --> Dlc
+Client --> Command
+Client --> Dq
+
+@enduml

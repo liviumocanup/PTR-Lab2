@@ -21,6 +21,55 @@ defmodule MessageBroker.TerminalHandler do
     send_client(socket, text)
   end
 
+  def write_line(socket, {:error, :ack, reason}) do
+    case reason do
+      :no_message -> send_client(socket, "No such message was addressed to you. Please check your subscriptions.")
+      :message_not_found -> send_client(socket, "A message with such ID was not found. Please check your spelling.")
+      :topic_not_found ->
+        send_client(socket, "No such topic was found. Erasing message...")
+        MessageBroker.SubscriptionManager.next_message(socket)
+        send_client(socket, "Corrupted message erased.")
+      :no_messages -> send_client(socket, "You don't have any messages. Consider subscribing to more topics!")
+      _ -> write_line(socket, {:error, reason})
+    end
+  end
+
+  def write_line(socket, {:error, :qos, reason}) do
+    case reason do
+      :unknown_role -> send_client(socket, "Unknown Role. Please register again.")
+      :no_pub -> send_client(socket, "You don't have such a message to PUBREL to.")
+      :no_sub -> send_client(socket, "You don't have such a message to PUBREC to.")
+      :no_comp -> send_client(socket, "You don't have such a message to PUBCOMP to.")
+      :topic_not_found ->
+        send_client(socket, "No such topic was found. Erasing message...")
+        MessageBroker.SubscriptionManager.next_message(socket)
+        send_client(socket, "Corrupted message erased.")
+      :no_messages -> send_client(socket, "You don't have any messages. Consider subscribing to more topics!")
+      _ -> write_line(socket, {:error, reason})
+    end
+  end
+
+  # Add these new lines to the write_line/2 function
+  def write_line(socket, {:ok, :pubrec, ref}) do
+    send_client(socket, "PUBREC|#{ref}")
+  end
+
+  def write_line(socket, {:ok, :pubrel, ref}) do
+    send_client(socket, "PUBREL|#{ref}")
+  end
+
+  def write_line(socket, {:ok, :pubcomp, ref}) do
+    send_client(socket, "PUBCOMP|#{ref}")
+  end
+
+  def write_line(socket, {:error, :invalid_pubrec}) do
+    send_client(socket, "Invalid PUBREC")
+  end
+
+  def write_line(socket, {:error, :invalid_pubrel}) do
+    send_client(socket, "Invalid PUBREL")
+  end
+
   def write_line(socket, {:error, :unknown, reason}) do
     # Known error; write to the client
     send_client(socket, "Unknown #{reason}")
@@ -44,6 +93,12 @@ defmodule MessageBroker.TerminalHandler do
   def write_line(_socket, {:error, :closed}) do
     # The connection was closed, exit politely
     exit(:shutdown)
+  end
+
+  def write_line(socket, {:error, :unsendable}) do
+    # Message was dead
+    send_client(socket, "Cannot load the tweet.")
+    # exit(error)
   end
 
   def write_line(socket, {:error, error}) do

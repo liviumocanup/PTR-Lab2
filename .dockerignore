@@ -1,0 +1,5 @@
+# .dockerignore
+/_build
+/deps
+/priv
+/test

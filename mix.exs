@@ -5,7 +5,7 @@ defmodule MessageBroker.MixProject do
     [
       app: :message_broker,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -22,6 +22,8 @@ defmodule MessageBroker.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:file_system, "~> 0.2"},
+      {:tortoise, "~> 0.10.0"}
       # {:httpoison, "~> 2.0"},
       # {:jason, "~> 1.4"},
       # {:dep_from_hexpm, "~> 0.3.0"},
