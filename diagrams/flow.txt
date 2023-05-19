@@ -1,0 +1,73 @@
+@startuml
+
+actor User as User
+
+participant "Server" as Server
+collections "Authenticator" as Auth
+participant "Role Manager" as Rm
+participant "Subscription Manager" as Sm
+collections "Client" as Client
+
+participant "Command" as Command
+participant "Dead Letter Channel" as Dlc
+participant "Durable Queue" as Dq
+
+collections "Communication Handler" as Ch
+participant "Communication Tracker" as Ct
+collections "TCP Handler" as Th
+collections "MQTT Handler" as MQTT
+collections "Structures Handler" as Sh
+
+database "Database" as Db
+
+
+
+User -> Server: Connection established
+Server -> Auth: Start serving worker for User
+
+User <- Auth: PUB or SUB?
+User -> Auth: Role Answer
+
+Auth -> Rm: Check whether User already has role
+User <-- Auth: if PUB, what is your name?
+User -> Auth: Name Answer
+Auth -> Rm: Assign role to User
+Rm -> Db: Store role for User
+Auth --> Sm: Register publisher if PUB
+Sm -> Db: Store name for User when PUB
+
+Auth -> Client: Start listening for User
+User --> Client: SUB/UNSUB to topic/publisher
+User --> Client: PUB to publish on topic
+Client -> Ch: Send request type and User
+
+Ch -> Ct: Save the type of communication to the User (TCP/MQTT)
+Ct -> Db: Store type of communication for User
+Ct --> Th: Send the request and User if TCP
+Ct --> MQTT: Send the request and User if MQTT
+
+Th --> Sh: Deserealize request
+MQTT --> Sh: Deserealize request
+
+Client <- Sh: Send deserealized request of User
+Client -> Command: Attempt running the command
+Rm <- Command: Check User rights based on role
+Command <- Sm: Process request (sub/unsub/publish)
+Sm -> Dlc: Verify sendability
+Sm <- Dlc: reply (:ok/:error)
+Sm --> Db: Store needed information (topic, subs to topic/pubs)
+
+Client <- Command: reply (:ok/:error)
+Client -> Dq: Store message
+
+Client -> Ch: Send answer to command
+Ch -> Ct: Send answer to User
+Ct --> Th: Reply based on type of communication
+Ct --> MQTT: Reply based on type of communication
+User <-- Th: Reply User
+User <-- MQTT: Reply User
+
+User -> Ch: Acknowledgment otherwise resend on timeout
+
+
+@enduml

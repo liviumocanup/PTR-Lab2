@@ -1,0 +1,21 @@
+version: '3'
+services:
+  message_broker:
+    build:
+      context: ./lab_2/message_broker
+      dockerfile: Dockerfile
+    ports:
+      - 4040:4040
+
+  my_app:
+    build:
+      context: ./lab 1
+      dockerfile: Dockerfile
+    depends_on:
+      - message_broker
+      - database_container
+
+  database_container:
+    image: alexburlacu/rtp-server:faf18x
+    ports:
+      - 4000:4000
